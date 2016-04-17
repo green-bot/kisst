@@ -3,7 +3,7 @@
 var _ = require('underscore')
 
 exports.networks = function (req, res) {
-  var currentUser = Parse.User.current()
+  var currentUser = req.user()
   var Integrations = Parse.Object.extend('Integrations')
   var query = new Parse.Query(Integrations)
   var integrations
@@ -47,7 +47,7 @@ exports.networks = function (req, res) {
 }
 
 exports.network_update = function (req, res) {
-    var currentUser = Parse.User.current()
+    var currentUser = req.user()
     var Integrations = Parse.Object.extend('Integrations')
     var query = new Parse.Query(Integrations)
     query.equalTo('type', 'network')
@@ -94,7 +94,7 @@ exports.network_update = function (req, res) {
       })
   }
 exports.add_number = function (req, res) {
-  var currentUser = Parse.User.current()
+  var currentUser = req.user()
   var Integrations = Parse.Object.extend('Integrations')
   var query = new Parse.Query(Integrations)
   var auth

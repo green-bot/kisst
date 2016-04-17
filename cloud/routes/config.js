@@ -3,59 +3,17 @@
 var _ = require('underscore')
 
 exports.info = function (req, res) {
-  var currentUser = Parse.User.current()
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      res.render('info', {
-        username: currentUser.get('username'),
-        email: currentUser.get('email'),
-        name: room.get('name'),
-        desc: room.get('desc'),
-        keyword: room.get('keyword')
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get room.')
-      console.log(error)
-    }
+  res.render('info', {
+    user: req.user,
+    room: req.session.room
   })
 }
 
 exports.rooms = function (req, res) {
-  var currentUser = Parse.User.current()
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.equalTo('user', currentUser)
-  query.find({
-    success: function (results) {
-      var keywords = []
-        // Do something with the returned Parse.Object values
-      for (var i = 0; i < results.length; i++) {
-        var object = results[i]
-        if (object.get('default')) {
-          keywords.push({
-            keyword: 'default',
-            name: object.get('name'),
-            id: object.id
-          })
-        } else {
-          keywords.push({
-            keyword: object.get('keyword') || 'default',
-            name: object.get('name'),
-            id: object.id
-          })
-        }
-      }
-      res.render('rooms', {
-        rooms: keywords
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get rooms... hmmmm')
-      console.log(error)
-    }
+  res.render('rooms', {
+    user: req.user,
+    rooms: req.session.rooms,
+    room: req.session.room
   })
 }
 
@@ -372,7 +330,7 @@ exports.notification_creds_update = function (req, res) {
 exports.type = function (req, res) {
   var Rooms = Parse.Object.extend('Rooms')
   var query = new Parse.Query(Rooms)
-  var currentUser = Parse.User.current()
+  var currentUser = req.user()
   var default_cmd
   var current_name
   query.get(req.cookies.roomId)
@@ -449,7 +407,7 @@ exports.type_change = function (req, res) {
 }
 
 exports.networks = function (req, res) {
-  var currentUser = Parse.User.current()
+  var currentUser = req.user()
   var Integrations = Parse.Object.extend('Integrations')
   var query = new Parse.Query(Integrations)
   var integrations
@@ -492,7 +450,7 @@ exports.networks = function (req, res) {
     })
 }
 exports.network_update = function (req, res) {
-  var currentUser = Parse.User.current()
+  var currentUser = req.user()
   var Integrations = Parse.Object.extend('Integrations')
   var query = new Parse.Query(Integrations)
   query.equalTo('type', 'network')
