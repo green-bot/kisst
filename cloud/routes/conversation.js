@@ -1,6 +1,7 @@
 /*global Parse */
 var app = global.app
 var _ = require('underscore')
+var debug = require('debug')('conversation')
 
 exports.download_csv = function (req, res) {
   var Sessions = Parse.Object.extend('Sessions')
@@ -92,8 +93,6 @@ exports.list = function (req, res) {
     return record
   })
   mappedSessions.toArray().then(function (sessions) {
-    console.log("Displaying sessions")
-    console.log(sessions)
     res.render('conversations', {
       conversations: sessions
     })
@@ -101,54 +100,52 @@ exports.list = function (req, res) {
 }
 
 exports.read = function (req, res) {
-  var session_id = req.params.id
-  var Sessions = Parse.Object.extend('Sessions')
-  var query = new Parse.Query(Sessions)
-  query.equalTo('sessionId', session_id)
-  query.first()
-    .then(function (session) {
-      var display_data = []
-      var data_set = JSON.parse(session.get('collected_data'))
-      var data_labels = _.keys(data_set)
-      _.each(data_labels, function convertForDisplay (element, index, list) {
-        var entry = {
-          key: element,
-          v: data_set[element]
-        }
-        display_data.push(entry)
-      })
-      var myDate = new Date(session.createdAt)
-      var options = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+  debug('Reading conversation')
+  var Sessions = app.locals.dbClient.collection('Sessions')
+  Sessions.find({_id: req.params.id}).limit(1).next()
+  .then(function (session) {
+    debug('Its a ')
+    debug(session)
+    var display_data = []
+    var data_labels = _.keys(session.collected_data)
+    _.each(data_labels, function convertForDisplay (element, index, list) {
+      var entry = {
+        key: element,
+        v: session.collected_data[element]
       }
-      var display_timestamp = myDate.toLocaleTimeString('en-us', options)
-      var display_transcript = []
-      var lines = JSON.parse(session.get('transcript'))
-      _.each(lines, function (element, index, list) {
-        display_transcript.push({
-					source: element.direction === 'ingress' ? data_set['SRC'] : data_set['DST'],
-					text: element.text
-				})
-      })
-      console.log(session)
-
-      res.renderPjax('conversation', {
-        session_id: session_id,
-        transcript: display_transcript,
-        collected_data: display_data,
-        src: data_set.SRC,
-        dst: data_set.DST,
-        timestamp: display_timestamp
-      })
-    }, function (error) {
-      console.log('Threw error in read')
-      console.log(error)
+      debug(entry)
+      display_data.push(entry)
     })
+    var myDate = new Date(session.createdAt)
+    var options = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }
+    var display_timestamp = myDate.toLocaleTimeString('en-us', options)
+    var display_transcript = []
+    _.each(session.transcript, function (element, index, list) {
+      display_transcript.push(
+        {
+          source: element.direction === 'ingress' ? session.src : session.dst,
+          text: element.text
+        })
+    })
+    res.render('conversation', {
+      session_id: req.params.id,
+      transcript: display_transcript,
+      collected_data: display_data,
+      src: session.src,
+      dst: session.dst,
+      timestamp: display_timestamp
+    })
+  })
+  .catch(function (err) {
+    debug(err)
+  })
 }
 app.get('/portal/conversations', exports.list)
 app.get('/portal/conversations/download', exports.download_csv)

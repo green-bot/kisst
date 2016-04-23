@@ -13,7 +13,7 @@ block content
 
         #new_email.collapse
           .panel-body
-            form.form-horizontal(method="POST", action="/portal/config/notification_email_add")
+            form.form-horizontal(method="POST", action="/portal/config/notificationEmailAdd")
               .input-group
                 input.form-control(name="email", placeholder="Additional notification email")
                 span.input-group-btn
@@ -27,7 +27,7 @@ block content
                   i.fa.fa-trash-o.fa-lg
 
     .panel.panel-default
-      form.form-horizontal(method="POST", action="/portal/config/notification_creds_update")
+      form.form-horizontal(method="POST", action="/portal/config/notificationCredsUpdate")
         .bootcards-list
           .panel-heading
             span.title Notification Settings

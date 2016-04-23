@@ -13,7 +13,7 @@ block content
 
         #new_owner.collapse
           .panel-body
-            form.form-horizontal(method="POST", action="/portal/config/owner_add")
+            form.form-horizontal(method="POST", action="/portal/config/ownerAdd")
               .input-group
                 input.form-control(name="new_owner", placeholder="Additional owner cellphone")
                 button.btn.btn-primary
@@ -22,6 +22,6 @@ block content
         .list-group
             each owner in owners
               .list-group-item
-                a(href="/portal/config/owner_delete?number="+owner, data-pjax='#main')
+                a(href="/portal/config/ownerDelete?number="+owner, data-pjax='#main')
                   = owner
                   i.fa.fa-trash-o.fa-lg
