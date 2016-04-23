@@ -1,5 +1,5 @@
 /*global Parse */
-
+var app = global.app
 var _ = require('underscore')
 
 exports.networks = function (req, res) {
@@ -137,3 +137,7 @@ exports.add_number = function (req, res) {
       console.error('Request failed with response code ' + httpResponse.status)
     })
 }
+
+app.get('/portal/config/networks', exports.networks)
+app.post('/portal/config/network_update', exports.network_update)
+app.get('/portal/config/add_number', exports.add_number)

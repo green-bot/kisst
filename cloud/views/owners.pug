@@ -22,6 +22,6 @@ block content
         .list-group
             each owner in owners
               .list-group-item
-                =owner
-                a(href='/portal/config/owner_delete?number=#{owner}', data-pjax='#main')
+                a(href="/portal/config/owner_delete?number="+owner, data-pjax='#main')
+                  = owner
                   i.fa.fa-trash-o.fa-lg

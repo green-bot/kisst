@@ -1,5 +1,5 @@
 /*global Parse */
-
+var app = global.app
 var _ = require('underscore')
 
 exports.download_csv = function (req, res) {
@@ -73,41 +73,31 @@ exports.download_csv = function (req, res) {
 }
 
 exports.list = function (req, res) {
-  var Sessions = Parse.Object.extend('Sessions')
-  var query = new Parse.Query(Sessions)
-  var Rooms = Parse.Object.extend('Rooms')
-  var room = new Rooms()
-  room.id = req.cookies.roomId
-  query.equalTo('room', room)
-  query.find().then(function (usersData) {
-      var conversations = []
-      _.each(usersData, function assemble (element, index, list) {
-        var record = {}
-        var src = element.get('src')
-        record.src = src
-        record.dst = req.cookies.roomName
-        record.session_id = element.get('sessionId')
-        var myDate = element.createdAt
-        var options = {
-          weekday: 'short',
-          year: '2-digit',
-          month: '2-digit',
-          day: '2-digit',
-          timeZone: 'America/New_York'
-        }
-        record.display_timestamp = myDate.toDateString('en-US', options)
-        record.objectId = element.get('objectId')
-        conversations.push(record)
-      })
-
-      res.renderPjax('conversations', {
-        conversations: conversations
-      })
-    }, function (error) {
-      console.log('Failed to get conversations.')
-      console.log(error)
-        // Not good.
+  var Sessions = app.locals.dbClient.collection('Sessions')
+  var mySessions = Sessions.find({botId: req.session.currentBot._id})
+  var date_options = {
+    weekday: 'short',
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'America/New_York'
+  }
+  var mappedSessions = mySessions.map(function (session) {
+    var record = {}
+    record.src = session.src
+    record.dst = session.dst
+    record.session_id = session.sessionId
+    record.ts = session.createdAt.toDateString('en-US', date_options)
+    record.objectId = session._id
+    return record
+  })
+  mappedSessions.toArray().then(function (sessions) {
+    console.log("Displaying sessions")
+    console.log(sessions)
+    res.render('conversations', {
+      conversations: sessions
     })
+  })
 }
 
 exports.read = function (req, res) {
@@ -160,3 +150,6 @@ exports.read = function (req, res) {
       console.log(error)
     })
 }
+app.get('/portal/conversations', exports.list)
+app.get('/portal/conversations/download', exports.download_csv)
+app.get('/portal/conversations/:id', exports.read)

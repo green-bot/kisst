@@ -14,17 +14,17 @@ block content
           .row
             each s in scripts
               .col-xs-6.col-sm-6
-                a.bootcards-summary-item(data-toggle="modal", data-target="##{s.name}", href="#")
+                a.bootcards-summary-item(data-toggle="modal", data-target=s.name, href="#")
                   i.fa.fa-3x(class=s.icon_class)
                   h4= s.name
-                    if s.cmd == default_cmd
+                    if s._id == currentBot._id
                       span.label.label-info
                         | current
                         i.fa.fa-check
 
 block dialogs
   each s in scripts
-    .modal.fade.active(role='dialog', id= '#{s.name}', tabindex='-1')
+    .modal.fade.active(role='dialog', id=s.name, tabindex='-1')
       .modal-dialog
         .modal-body
           .container
@@ -37,7 +37,7 @@ block dialogs
                     h4
                       #{s.name}
                     p
-                      !{s.desc}
+                      #{s.desc}
                     .text-center
                       a.btn.btn-primary(href="/portal/config/type_change/#{s.id}") Set As Conversation
                       a.btn.btn-primary(data-dismiss="modal", data-target="##{s.name}") Cancel

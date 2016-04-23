@@ -24,7 +24,7 @@ block content
                 h4
                   | Settings
             .col-sm-3
-              a.bootcards-summary-item(href='/portal/config/rooms', data-pjax='#main', data-title='Help', style='padding-top:35px;')
+              a.bootcards-summary-item(href='/portal/config/bots', data-pjax='#main', data-title='Help', style='padding-top:35px;')
                 i.fa.fa-3x.fa-exchange
                 h4
                   | Switch Room
@@ -40,4 +40,4 @@ block content
                   | Sign Out
         .panel-footer
           small.pull-left
-            Currently Room: #{roomName}, keyword #{selectedKeyword}
+            p Bot: #{current_room}

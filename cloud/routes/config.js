@@ -1,39 +1,38 @@
 /*global Parse */
 
+var app = global.app
 var _ = require('underscore')
+var debug = require('debug')('config')
 
 exports.info = function (req, res) {
+  console.log('My session')
+  console.log(req.session)
+  var keywords = _.reduce(
+    req.session.currentBot.addresses,
+    function (memo, address) {
+      return memo + address.networkHandleName + ','
+    },
+    ''
+  )
   res.render('info', {
     user: req.user,
-    room: req.session.room
+    bot: req.session.currentBot,
+    keywords: keywords
   })
 }
 
-exports.rooms = function (req, res) {
-  res.render('rooms', {
+exports.bots = function (req, res) {
+  res.render('bots', {
     user: req.user,
-    rooms: req.session.rooms,
-    room: req.session.room
+    bots: req.session.bots
   })
 }
 
-exports.change_room = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.query.id, {
-    success: function (selectedRoom) {
-      var selectedKeyword = selectedRoom.get('keyword') || 'default'
-      res.cookie('roomId', selectedRoom.id)
-      res.cookie('roomName', selectedRoom.get('name'))
-      res.cookie('selectedKeyword', selectedKeyword)
-      res.redirect('/portal')
-    },
-    error: function (error) {
-      console.log('Failed to get room.')
-      console.log(error)
-    }
-  })
+exports.changeBot = function (req, res) {
+  req.session.currentBot = _.findWhere(req.session.bots, { _id: req.query.id })
+  res.redirect('/portal')
 }
+
 exports.settings = function (req, res) {
   var cookies = req.cookies
   res.render('settings', {
@@ -44,82 +43,50 @@ exports.settings = function (req, res) {
 }
 
 exports.list = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      var room_settings = room.get('settings')
-      var setting_keys = _.keys(room_settings)
-      setting_keys.sort()
-      var display_settings = []
-      _.each(setting_keys, function (element, index, list) {
-        var item = {
-          key: element,
-          v: room_settings[element]
-        }
-        display_settings.push(item)
-      })
-      res.renderPjax('config', {
-        config: display_settings
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get room.')
-      console.log(error)
-    }
+  var display_settings = []
+  _.each(req.session.currentBot.settings, function (element, index, list) {
+    display_settings.push({
+      key: element.name,
+      v: element.value
+    })
+  })
+  res.render('config', {
+    config: display_settings
   })
 }
 
 exports.edit = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      var room_settings = room.get('settings')
-      var setting_keys = _.keys(room_settings)
-        .sort()
-      var display_settings = []
-      _.each(setting_keys, function (element, index, list) {
-        var item = {
-          key: element,
-          v: room_settings[element]
-        }
-        display_settings.push(item)
-      })
-      res.renderPjax('config_edit', {
-        config: display_settings
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get room.')
-      console.log(error)
-    }
+  var display_settings = []
+  _.each(req.session.currentBot.settings, function (element, index, list) {
+    display_settings.push({
+      key: element.name,
+      v: element.value
+    })
+  })
+  res.render('config_edit', {
+    config: display_settings
   })
 }
 
 exports.save = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      var room_settings = room.get('settings')
-        // This posted form has two kinds of data. Password
-        // and room settings. Process the password first
-      _.each(room_settings, function (value, key, list) {
-        if (_.has(req.body, key)) {
-          room_settings[key] = req.body[key]
-        }
-      })
-      room.set('settings', room_settings)
-      room.save()
-        .then(function (room) {
-          res.redirect('/portal/config')
-        })
-    },
-    error: function (error) {
-      console.log('Error thrown while saving settings.')
-      console.log(error)
-    }
+  debug('Saving')
+  debug(req.body)
+  debug(req.session.currentBot.settings)
+  _.each(req.body, function (elem, index, list) {
+    debug('Checking')
+    debug(index)
+    debug(elem)
+    // For each of the parameters in req.body, update the setting
+    var setting = _.findWhere(req.session.currentBot.settings, {name: index})
+    setting.value = elem
+  })
+  debug('the current bot settings:', req.session.currentBot.settings)
+  var Bots = app.locals.dbClient.collection('Bots')
+  Bots.updateOne(
+    {'_id': req.session.currentBot._id},
+    {$set: { settings: req.session.currentBot.settings }}
+  ).then(function (result) {
+    res.redirect('/portal/config')
   })
 }
 
@@ -145,232 +112,112 @@ exports.reset_request = function (req, res) {
 }
 
 exports.owners = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      var owners = room.get('owners')
-      res.render('owners', {
-        owners: owners
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get owners.')
-      console.log(error)
-    }
+  res.render('owners', {
+    owners: req.session.currentBot.ownerHandles
   })
 }
 
 exports.owner_delete = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      var owners = room.get('owners')
-      console.log('Owners has')
-      console.log(owners)
-      console.log('Removing')
-      console.log(req.query.number)
-
-      var new_owners = _.without(owners, req.query.number)
-      console.log('Now has')
-      console.log(new_owners)
-      room.set('owners', new_owners)
-      room.save({
-        success: function () {
-          res.render('owners', {
-            owners: new_owners
-          })
-        },
-        error: function () {
-          console.log('Could not save room.')
-          res.render('owners', {
-            owners: owners
-          })
-        }
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get owners.')
-      console.log(error)
-    }
+  req.session.currentBot.ownerHandles =
+    _.without(req.session.currentBot.ownerHandles, req.query.number)
+  var Bots = app.locals.dbClient.collection('Bots')
+  Bots.update(
+    {'_id': req.session.currentBot._id},
+    {$set: {ownerHandles: req.session.currentBot.ownerHandles}})
+  res.render('owners', {
+    owners: req.session.currentBot.ownerHandles
   })
 }
+
 exports.owner_add = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      var owners = room.get('owners')
-      var owner_number = req.body.new_owner.replace(/\D/g, '')
-      owners.push(owner_number)
-      room.set('owners', owners)
-      room.save({
-        success: function () {
-          res.render('owners', {
-            owners: owners
-          })
-        },
-        error: function () {
-          console.log('Could not save room.')
-          res.render('owners', {
-            owners: owners
-          })
-        }
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get owners.')
-      console.log(error)
-    }
+  var owner_number = req.body.new_owner.replace(/\D/g, '')
+  req.session.currentBot.ownerHandles.push(owner_number)
+  var Bots = app.locals.dbClient.collection('Bots')
+  Bots.update(
+    {'_id': req.session.currentBot._id},
+    {$set: {ownerHandles: req.session.currentBot.ownerHandles}})
+  res.render('owners', {
+    owners: req.session.currentBot.ownerHandles
   })
 }
 
-exports.notification_emails = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      res.render('notification_emails', {
-        notification_emails: room.get('notification_emails'),
-        mail_user: room.get('mail_user'),
-        mail_pass: room.get('mail_pass'),
-        webhook: room.get('webhook_url')
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get notification_emails.')
-      console.log(error)
-    }
+exports.notificationEmails = function (req, res) {
+  // Convert the comma seperated string into an array
+  res.render('notification_emails', {
+    notificationEmails: req.session.currentBot.notificationEmails.split(','),
+    mail_user: req.session.currentBot.mail_user,
+    mail_pass: req.session.currentBot.mail_pass,
+    webhook: req.session.currentBot.webhook
   })
 }
-exports.notification_email_delete = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      var notification_emails = room.get('notification_emails')
-      console.log('notification_emails has')
-      console.log(notification_emails)
-      console.log('Removing')
-      console.log(req.query.email)
 
-      var new_notification_emails = _.without(notification_emails, req.query.email)
-      console.log('Now has')
-      console.log(new_notification_emails)
-      room.set('notification_emails', new_notification_emails)
-      room.save({
-        success: function () {
-          res.redirect('/portal/config/notification_emails')
-        },
-        error: function () {
-          console.log('Could not save room.')
-          res.redirect('/portal/config/notification_emails')
-        }
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get notification_emails.')
-      console.log(error)
-    }
+exports.notificationEmailDelete = function (req, res) {
+  var notificationEmails = req.session.currentBot.notificationEmails.split(',')
+  req.session.currentBot.notificationEmails =
+    _.without(notificationEmails, req.query.email).join(',')
+  var Bots = app.locals.dbClient.collection('Bots')
+  Bots.update(
+    {'_id': req.session.currentBot._id},
+    {$set: {notificationEmails: req.session.currentBot.notificationEmails}})
+  res.render('notification_emails', {
+    notificationEmails: req.session.currentBot.notificationEmails.split(','),
+    mail_user: req.session.currentBot.mail_user,
+    mail_pass: req.session.currentBot.mail_pass,
+    webhook: req.session.currentBot.webhook
   })
 }
+
 exports.notification_email_add = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      var notification_emails = room.get('notification_emails')
-      var notification_email = req.body.email
-      notification_emails.push(notification_email)
-      room.set('notification_emails', notification_emails)
-      room.save({
-        success: function () {
-          res.redirect('/portal/config/notification_emails')
-        },
-        error: function () {
-          console.log('Could not save room.')
-          res.redirect('/portal/config/notification_emails')
-        }
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get notification_emails.')
-      console.log(error)
-    }
+  req.session.currentBot.notificationEmails += ',' + req.body.email
+  var Bots = app.locals.dbClient.collection('Bots')
+  Bots.update(
+    {'_id': req.session.currentBot._id},
+    {$set: {notificationEmails: req.session.currentBot.notificationEmails}})
+  res.render('notification_emails', {
+    notificationEmails: req.session.currentBot.notificationEmails.split(','),
+    mail_user: req.session.currentBot.mail_user,
+    mail_pass: req.session.currentBot.mail_pass,
+    webhook: req.session.currentBot.webhook
   })
 }
+
 exports.notification_creds_update = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  query.get(req.cookies.roomId, {
-    success: function (room) {
-      room.set('mail_user', req.body.mail_user)
-      room.set('mail_pass', req.body.mail_pass)
-      room.set('webhook_url', req.body.webhook)
-      room.save({
-        success: function () {
-          console.log('Saved room successfully')
-          res.redirect('/portal/settings')
-        },
-        error: function () {
-          console.log('Could not save room.')
-          res.redirect('/portal/config/notification_emails')
-        }
-      })
-    },
-    error: function (error) {
-      console.log('Failed to get notification_emails.')
-      console.log(error)
-      res.redirect('/portal/config')
-    }
+  req.session.currentBot.mail_user = req.body.mail_user
+  req.session.currentBot.mail_pass = req.body.mail_pass
+  req.session.currentBot.webhook = req.body.webhook
+  var Bots = app.locals.dbClient.collection('Bots')
+  Bots.update(
+    {'_id': req.session.currentBot._id},
+    { $set: {
+      mail_user: req.body.mail_user,
+      mail_pass: req.body.mail_pass,
+      webhook: req.body.webhook
+    }})
+  res.render('notification_emails', {
+    notificationEmails: req.session.currentBot.notificationEmails.split(','),
+    mail_user: req.session.currentBot.mail_user,
+    mail_pass: req.session.currentBot.mail_pass,
+    webhook: req.session.currentBot.webhook
   })
+}
+
+exports.newBot = function (req, res) {
+  res.render('new_bot')
 }
 
 exports.type = function (req, res) {
-  var Rooms = Parse.Object.extend('Rooms')
-  var query = new Parse.Query(Rooms)
-  var currentUser = req.user()
-  var default_cmd
-  var current_name
-  query.get(req.cookies.roomId)
-    .then(function (room) {
-      default_cmd = room.get('default_cmd')
-      var Script = Parse.Object.extend('Scripts')
-      var global_query = new Parse.Query(Script)
-      global_query.equalTo('global', true)
-      var user_query = new Parse.Query(Script)
-      user_query.equalTo('user', currentUser)
-      var main_query = new Parse.Query.or(global_query, user_query)
-      main_query.ascending('name')
-      return main_query.find()
+  var Scripts = app.locals.dbClient.collection('Scripts')
+  Scripts.find().toArray()
+  .then(function (scripts) {
+    res.render('types', {
+      scripts: scripts,
+      currentBot: req.session.currentBot
     })
-    .then(function (elements) {
-      var display_settings = []
-      _.each(elements, function (element, index, list) {
-        if (element.get('global') === true ||
-            currentUser.id === element.get('user').id) {
-          var item = {
-            name: element.get('name'),
-            cmd: element.get('default_cmd'),
-            id: element.id,
-            active: false,
-            icon_class: element.get('icon_class'),
-            desc: element.get('desc')
-          }
-          if (default_cmd === item.cmd) {
-            item.active = true
-            current_name = item.name
-          }
-          display_settings.push(item)
-        }
-      })
-      res.render('types', {
-        scripts: display_settings,
-        default_cmd: default_cmd,
-        current_name: current_name
-      })
-    })
+  })
+  .catch(function (err) {
+    console.log('Function error')
+    console.log(err)
+  })
 }
 
 exports.type_change = function (req, res) {
@@ -496,3 +343,20 @@ exports.network_update = function (req, res) {
       console.log(error)
     })
 }
+app.get('/portal/config/owners', exports.owners)
+app.get('/portal/config/owner_delete', exports.owner_delete)
+app.post('/portal/config/owner_add', exports.owner_add)
+app.get('/portal/config/notification_emails', exports.notificationEmails)
+app.get('/portal/config/notification_email_delete', exports.notificationEmailDelete)
+app.post('/portal/config/notification_email_add', exports.notification_email_add)
+app.post('/portal/config/notification_creds_update', exports.notification_creds_update)
+app.get('/portal/config/type', exports.type)
+app.get('/portal/config/info', exports.info)
+app.get('/portal/config', exports.list)
+app.get('/portal/config/edit', exports.edit)
+app.post('/portal/config/save', exports.save)
+app.post('/reset_request', exports.reset_request)
+app.get('/portal/settings', exports.settings)
+app.get('/portal/config/bots', exports.bots)
+app.get('/portal/config/change_bot', exports.changeBot)
+app.get('/portal/config/type_change/:id', exports.type_change)
