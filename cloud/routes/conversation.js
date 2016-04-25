@@ -1,61 +1,65 @@
-/*global Parse */
 var app = global.app
 var _ = require('underscore')
 var debug = require('debug')('conversation')
 
 exports.download_csv = function (req, res) {
-  var Sessions = Parse.Object.extend('Sessions')
-  var query = new Parse.Query(Sessions)
-  var Rooms = Parse.Object.extend('Rooms')
-  var room = new Rooms()
-  room.id = req.cookies.roomId
-  query.equalTo('room', room)
-  query.find().then(function (usersData) {
+  var Sessions = app.locals.dbClient.collection('Sessions')
+  var mySessions = Sessions.find({botId: req.session.currentBot._id})
+  mySessions.toArray().then(function (sessions) {
     // We have to figure out the headers for the CSV, which includes
     // not only the standard fields, but also the fields that are
-    // embedded in collected_data.
+    // embedded in collectedData.
     var conversations = []
     var keys = []
-    _.each(usersData, function assemble (element, index, list) {
+    _.each(sessions, function assemble (session, index, list) {
       var record = {}
-      var parsedData = JSON.parse(element.get('collected_data'))
-      console.log('This row has collected data ' + JSON.stringify(parsedData))
-      console.log('This row has properties' + JSON.stringify(Object.keys(element)))
-      record.src = element.get('src')
-      record.dst = req.cookies.roomName
-      record.session_id = element.get('sessionId')
-      record.conversation_start = element.createdAt.toISOString()
-      record.conversation_end = element.updatedAt.toISOString()
-      _.each(Object.keys(parsedData), function extract (element, index, list) {
-        var new_key_name = 'data_' + element
-        record[new_key_name] = parsedData[element]
+      debug('Managing session')
+      debug(session)
+      debug('This row has collected data ')
+      debug(session.collectedData)
+      debug('This row has properties')
+      debug(Object.keys(session))
+      record.src = session.src
+      record.dst = session.dst
+      record.session_id = session.sessionId
+      record.conversation_start = session.createdAt.toISOString()
+      record.conversation_end = session.updatedAt.toISOString()
+      _.each(Object.keys(session.collectedData), function extract (property, index, list) {
+        var new_key_name = 'data_' + property
+        record[new_key_name] = session.collectedData[property]
       })
-      var originalTranscript = JSON.parse(element.get('transcript'))
+      var originalTranscript = session.transcript
       var transcript = ''
-      _.each(originalTranscript, function (element, index, list) {
-        transcript += element['direction'] + ':' + element['text'] + '|'
+      _.each(originalTranscript, function (line, index, list) {
+        transcript += line['direction'] + ':' + line['text'] + '|'
       })
       record.transcript = transcript
       conversations.push(record)
       keys.push(Object.keys(record))
-      console.log('Added the following keys' + JSON.stringify(Object.keys(record)))
+      debug('Added the following keys')
+      debug(JSON.stringify(Object.keys(record)))
     })
     // keys has many duplicates, needs flattening
     keys = _.flatten(keys)
     keys = _.uniq(keys)
 
-    console.log('Found the following keys' + JSON.stringify(keys))
+    debug('Found the following keys')
+    debug(keys)
 
     // Now that it's collected and expanded, create the CSV
     var csv = ''
 
-    _.each(keys, function add_headers (element, index, list) {
-      csv += element + ','
+    _.each(keys, function add_headers (header, index, list) {
+      csv += header + ','
     })
     // Erase that last comma for the header
     csv = csv.slice(0, -1) + '\n'
 
+    debug('CSV Header')
+    debug(csv)
+
     _.each(conversations, function assemble_csv (row, index, list) {
+      debug('Adding ')
       _.each(keys, function add_col (key, index, list) {
         csv += row[key] + ','
       })
@@ -66,10 +70,9 @@ exports.download_csv = function (req, res) {
       'Content-type': 'text/csv'
     })
     res.send(csv)
-  }, function (error) {
-    console.log('Failed to get conversations.')
-    console.log(error)
-      // Not good.
+  })
+  .catch(function (err) {
+    debug(err)
   })
 }
 
