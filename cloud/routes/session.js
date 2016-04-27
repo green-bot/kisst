@@ -6,27 +6,21 @@ app.use('/portal', function (req, res, next) {
     // The user is  logged in.
     debug('Current user')
     debug(req.user)
-    if (!req.session.bots) {
-      var Bots = app.locals.dbClient.collection('Bots')
-      var q = Bots.find({'accountId': req.user._id}).toArray()
-      q.then(function (bots) {
-        req.session.bots = bots
-        if (bots.length > 0) {
-          req.session.currentBot = bots[0]
-        } else {
-          req.session.currentBot = undefined
-          debug('Account has no bots')
-        }
-        debug(req.user)
-      })
-    }
-    debug(req.session.currentBot)
-    debug(req.session.bots)
-    next()
+    var Bots = app.locals.dbClient.collection('Bots')
+    var q = Bots.find({'accountId': req.user._id}).toArray()
+    q.then(function (bots) {
+      debug('This account has the following bots')
+      debug(bots)
+      req.session.bots = bots
+      next()
+    })
+    .catch(function (err) {
+      debug('Error thrown')
+      debug(err)
+    })
   } else {
     // The user is not logged in.
     debug('No current user')
     res.redirect('/login')
   }
-
 })
