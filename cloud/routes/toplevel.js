@@ -1,6 +1,5 @@
-/*global Parse */
 var app = global.app
-var _ = require('underscore')
+var debug = require('debug')('toplevel')
 
 app.locals.menu = [{
   id: 'dashboard',
@@ -49,15 +48,30 @@ app.get('/login', function (req, res) {
   res.render('login')
 })
 app.get('/logout', function (req, res) {
+  req.session.currentBot = undefined
+  req.session.bots = undefined
   req.logout()
   res.redirect('/')
 })
 
 app.get('/portal', function (req, res) {
+  var anyBots = false
+  if (Array.isArray(req.session.bots)) {
+    debug('bots is an array')
+    if (req.session.bots.length > 0) {
+      debug('The length is ' + req.session.bots.length)
+      anyBots = true
+      debug('We have bots')
+      debug('The current bot is')
+      debug(req.session.currentBot)
+      debug('All of the account bots are')
+      debug(req.session.bots)
+    }
+  }
   res.render('dashboard', {
     menus: app.locals.menu,
-    current_room: req.session.currentBot.name,
-    networkAddresses: req.session.currentBot.addresses
+    currentBot: req.session.currentBot,
+    anyBots: anyBots
   })
 })
 

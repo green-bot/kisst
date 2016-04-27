@@ -1,0 +1,16 @@
+extends ./layout
+
+block content
+  .row
+    .bootcards-cards
+      .panel.panel-default.bootcards-summary
+        .panel-heading
+          h3.panel-title Library
+        .panel-body
+          .row
+            each script in scripts
+              - var icon_class = script.icon_class
+              .col-sm-3
+                a.bootcards-summary-item(href='/portal/script/' + script._id, data-title='Information', style='padding-top:35px;')
+                  i(class = 'fa fa-3x fa-' + icon_class)
+                  h4= script.name

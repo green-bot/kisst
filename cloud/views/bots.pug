@@ -10,10 +10,11 @@ block content
           .row
             each bot in bots
               .col-sm-3
-                a.bootcards-summary-item(href='/portal/config/change_bot?id=bot._id', style='padding-top:35px;')
+                a.bootcards-summary-item(href='/portal/config/change_bot?id=' + bot._id, style='padding-top:35px;')
                   i.fa.fa-3x.fa-tags-o
                   h4
                     | #{bot.name}
                   h4
-                    each address in bot.addresses
-                      = address.network
+                    if bot.adresses
+                      each address in bot.addresses
+                        = address.network

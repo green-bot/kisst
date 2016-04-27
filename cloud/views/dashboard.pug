@@ -5,29 +5,41 @@ block content
     .bootcards-cards
       .panel.panel-default.bootcards-summary
         .panel-heading
-          h3.panel-title Dashboard - #{current_room} : #{current_keyword}
+          if anyBots
+            h3.panel-title Dashboard - #{currentBot.name} 
+          else
+            h3.panel-title No Bot Selected
         .panel-body
           .row
+            if anyBots
+              .col-sm-3
+                a.bootcards-summary-item(href='/portal/config/info', data-title='Information', style='padding-top:35px;')
+                  i.fa.fa-3x.fa-info-circle
+                  h4
+                    | Info
+            if anyBots
+              .col-sm-3
+                a.bootcards-summary-item(href='/portal/conversations', data-pjax='#main', data-title='Conversations', style='padding-top:35px;')
+                  i.fa.fa-3x.fa-comments-o
+                  h4
+                    | Conversations
+            if anyBots
+              .col-sm-3
+                a.bootcards-summary-item(href='/portal/settings', style='padding-top:35px;')
+                  i.fa.fa-3x.fa-cogs
+                  h4
+                    | Settings
+            if anyBots
+              .col-sm-3
+                a.bootcards-summary-item(href='/portal/config/bots', data-pjax='#main', data-title='Help', style='padding-top:35px;')
+                  i.fa.fa-3x.fa-exchange
+                  h4
+                    | Switch Bot
             .col-sm-3
-              a.bootcards-summary-item(href='/portal/config/info', data-title='Information', style='padding-top:35px;')
-                i.fa.fa-3x.fa-info-circle
+              a.bootcards-summary-item(href='/portal/library', data-title='Help', style='padding-top:35px;')
+                i.fa.fa-3x.fa-plus
                 h4
-                  | Info
-            .col-sm-3
-              a.bootcards-summary-item(href='/portal/conversations', data-pjax='#main', data-title='Conversations', style='padding-top:35px;')
-                i.fa.fa-3x.fa-comments-o
-                h4
-                  | Conversations
-            .col-sm-3
-              a.bootcards-summary-item(href='/portal/settings', style='padding-top:35px;')
-                i.fa.fa-3x.fa-cogs
-                h4
-                  | Settings
-            .col-sm-3
-              a.bootcards-summary-item(href='/portal/config/bots', data-pjax='#main', data-title='Help', style='padding-top:35px;')
-                i.fa.fa-3x.fa-exchange
-                h4
-                  | Switch Room
+                  | New Bot
             .col-sm-3
               a.bootcards-summary-item(href='http://kisst.zendesk.com', data-pjax='#main', data-title='Help', style='padding-top:35px;')
                 i.fa.fa-3x.fa-question-circle
@@ -40,4 +52,5 @@ block content
                   | Sign Out
         .panel-footer
           small.pull-left
-            p Bot: #{current_room}
+            if anyBots
+              p Bot: #{currentBot.name}

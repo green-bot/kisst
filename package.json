@@ -17,6 +17,7 @@
     "express-hbs": "~0.7.8",
     "express-pjax": "0.0.1",
     "express-trace": "0.0.3",
+    "jstransformer-markdown": "1.1.0",
     "moment": "~2.5.1",
     "mongodb": "2.1.16",
     "passport": "0.3.2",
