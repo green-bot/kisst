@@ -1,0 +1,27 @@
+extends ./layout
+
+block content
+  .col-sm-6
+    .panel.panel-default
+      .bootcards-list
+        .panel-heading
+          span.title Keywords
+          ul.pull-right.no-list-dots
+            li
+              a(data-toggle="collapse", href="#new_owner", aria-expanded="false", aria-controls="new_owner")
+                i.fa.fa-plus-square.fa-2x
+
+        #new_owner.collapse
+          .panel-body
+            form.form-horizontal(method="POST", action="/portal/config/keywordAdd")
+              .input-group
+                input.form-control(name="newKeyword")
+                button.btn.btn-primary
+                  i.fa.fa-plus-square
+                  |   Add
+        .list-group
+            each keyword in keywords
+              .list-group-item
+                a(href='/portal/config/keywordDelete?keyword=' + keyword)
+                  = keyword
+                  i.fa.fa-trash-o.fa-lg

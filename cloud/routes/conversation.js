@@ -78,7 +78,10 @@ exports.download_csv = function (req, res) {
 
 exports.list = function (req, res) {
   var Sessions = app.locals.dbClient.collection('Sessions')
-  var mySessions = Sessions.find({botId: req.session.currentBot._id})
+  var botIds = _.map(req.session.bots, function (bot) { return bot._id })
+  debug('Looking for the following bot Ids')
+  debug(botIds)
+  var mySessions = Sessions.find({botId: { $in: botIds }})
   var date_options = {
     weekday: 'short',
     year: '2-digit',

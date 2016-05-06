@@ -14,30 +14,10 @@ block content
           .row
             each s in scripts
               .col-xs-6.col-sm-6
-                a.bootcards-summary-item(data-toggle="modal", data-target=s.name, href="#")
+                a.bootcards-summary-item(href='/portal/config/typeChange/' + s._id)
                   i.fa.fa-3x(class=s.icon_class)
                   h4= s.name
                     if s._id == currentBot._id
                       span.label.label-info
                         | current
                         i.fa.fa-check
-
-block dialogs
-  each s in scripts
-    .modal.fade.active(role='dialog', id=s.name, tabindex='-1')
-      .modal-dialog
-        .modal-body
-          .container
-            .row.col-sm-10
-              .bootcards-list
-                .panel.panel-default.bootcards-summary
-                  .panel-heading.clearfix
-                    h3.panel-title.pull-left Conversation : #{s.name}
-                  .panel-body
-                    h4
-                      #{s.name}
-                    p
-                      #{s.desc}
-                    .text-center
-                      a.btn.btn-primary(href="/portal/config/typeChange/#{s.id}") Set As Conversation
-                      a.btn.btn-primary(data-dismiss="modal", data-target="##{s.name}") Cancel

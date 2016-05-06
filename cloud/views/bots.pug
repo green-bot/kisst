@@ -5,16 +5,17 @@ block content
     .bootcards-cards
       .panel.panel-default.bootcards-summary
         .panel-heading
-          h3.panel-title Account Rooms
+          | Your Bots
         .panel-body
           .row
             each bot in bots
               .col-sm-3
-                a.bootcards-summary-item(href='/portal/config/change_bot?id=' + bot._id, style='padding-top:35px;')
-                  i.fa.fa-3x.fa-tags-o
-                  h4
-                    | #{bot.name}
-                  h4
-                    if bot.adresses
-                      each address in bot.addresses
-                        = address.network
+                a.bootcards-summary-item(href='/portal/settings/' + bot._id, style='padding-top:35px;')
+                  i.fa.fa-3x.fa-info-circle
+                  h4= bot.name
+            .col-sm-3
+              a.bootcards-summary-item(href='/portal/library', style='padding-top:35px;')
+                i.fa.fa-3x.fa-plus
+                h4
+                  | New Bot
+        .panel-footer

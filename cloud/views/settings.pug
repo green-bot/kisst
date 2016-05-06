@@ -5,9 +5,14 @@ block content
     .bootcards-cards
       .panel.panel-default.bootcards-summary
         .panel-heading
-          h3.panel-title Configuring #{name} : #{keyword}
+          h3.panel-title Configuring #{bot.name}
         .panel-body
           .row
+            .col-sm-3
+              a.bootcards-summary-item(href='/portal/config/keywords',  style='padding-top:35px;')
+                i.fa.fa-3x.fa-hand-spock-o
+                h4
+                  | Keywords
             .col-sm-3
               a.bootcards-summary-item(href='/portal/config',  style='padding-top:35px;')
                 i.fa.fa-3x.fa-comment

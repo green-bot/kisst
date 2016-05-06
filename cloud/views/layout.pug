@@ -7,7 +7,7 @@ html(lang='en')
     meta(name='viewport', content='width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no')
     title KISST
     link(href='//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css', rel='stylesheet')
-    link(href='//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css', rel='stylesheet')
+    link(href='//netdna.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css', rel='stylesheet')
     link(href='/css/bootstrap.min.css', rel='stylesheet')
     link(href='//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.css', rel='stylesheet')
     link(href='/css/bootcards-desktop.min.css', rel="stylesheet")
@@ -33,25 +33,20 @@ html(lang='en')
             button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#bs-example-navbar-collapse-1')
               span.sr-only Toggle navigation
               i.fa.fa-bars.hamburger
-            a.navbar-brand.hamburger(href='/portal') KISST
+            a.navbar-brand.hamburger(href='/portal/conversations') KISST
           // Collect the nav links, forms, and other content for toggling
           #bs-example-navbar-collapse-1.collapse.navbar-collapse
             ul.nav.navbar-nav
-              li.active
-                a(href='/portal/config/info')
-                  h4
-                    i.fa.fa-info.fa-lg
-                    | Information
               li
                 a(href='/portal/conversations')
                   h4
                     i.fa.fa-comments-o.fa-lg
-                    | Conversations
+                    | Portal
               li
-                a(href='/portal/settings')
+                a(href='/portal/config/bots')
                   h4
                     i.fa.fa-cogs.fa-lg
-                    | Settings
+                    | Bots
               li
                 a(href='http://kissthelp.zendesk.com')
                   h4

@@ -66,7 +66,7 @@ exports.new = function (req, res) {
     debug('The bots in the database')
     debug(bots)
     req.session.bots = bots
-    res.redirect('/portal')
+    res.redirect('/portal/conversations')
   })
   .catch(function (err) {
     debug('Caught error in script')

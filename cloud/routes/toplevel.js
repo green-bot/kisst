@@ -11,12 +11,6 @@ app.get('/logout', function (req, res) {
   res.redirect('/')
 })
 
-app.get('/portal', function (req, res) {
-  res.render('dashboard', {
-    bots: req.session.bots
-  })
-})
-
 app.get('/portal/config/nexmo', function (req, res) {
   res.render('nexmo')
 })

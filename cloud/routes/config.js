@@ -1,6 +1,7 @@
 var app = global.app
 var _ = require('underscore')
 var debug = require('debug')('config')
+var ObjectID = require('mongodb').ObjectID
 
 exports.info = function (req, res) {
   var keywords = _.reduce(
@@ -26,15 +27,17 @@ exports.bots = function (req, res) {
 
 exports.changeBot = function (req, res) {
   req.session.currentBot = _.findWhere(req.session.bots, { _id: req.query.id })
-  res.redirect('/portal')
+  res.redirect('/portal/conversations')
 }
 
 exports.settings = function (req, res) {
-  var cookies = req.cookies
-  res.render('settings', {
-    name: cookies.roomName,
-    keywords: cookies.keywords,
-    keyword: cookies.selectedKeyword
+  var Bots = app.locals.dbClient.collection('Bots')
+  Bots.find({_id: req.params.id}).limit(1).next()
+  .then(function (bot) {
+    req.session.currentBot = bot
+    res.render('settings', {
+      bot: bot
+    })
   })
 }
 
@@ -107,6 +110,32 @@ exports.ownerAdd = function (req, res) {
   res.render('owners', {
     owners: req.session.currentBot.ownerHandles
   })
+}
+
+function keywords (addresses) {
+  var keywords = _.map(addresses, function (address) {
+    return address.keywords
+  })
+  var rawKeywords = _.flatten(keywords)
+  var finalKeywords = _.without(rawKeywords, 'test')
+  debug('Current keywords')
+  debug(finalKeywords)
+  return finalKeywords
+}
+
+exports.keywords = function (req, res) {
+  res.render('keywords', {
+    keywords: keywords(req.session.currentBot.addresses)
+  })
+}
+
+exports.keywordAdd = function (req, res) {
+  req.session.currentBot.addresses[0].keywords.push(req.body.newKeyword)
+  var Bots = app.locals.dbClient.collection('Bots')
+  Bots.update(
+    {'_id': req.session.currentBot._id},
+    {$set: {addresses: req.session.currentBot.addresses}})
+  res.redirect('/portal/config/keywords')
 }
 
 exports.notificationEmails = function (req, res) {
@@ -189,19 +218,24 @@ exports.type = function (req, res) {
 }
 
 exports.typeChange = function (req, res) {
+  var objectId = new ObjectID(req.params.id)
+  var botId = req.session.currentBot._id
+  debug('Changing type to ID ' + req.params.id)
   var Scripts = app.locals.dbClient.collection('Scripts')
-  Scripts.find().toArray()
-  .then(function (scripts) {
-    var newScript = _.findWhere(req.session.bots, {_id: req.params.id})
+  Scripts.find({_id: objectId}).next()
+  .then(function (newScript) {
+    debug('Look at what I found')
+    debug(newScript)
+
     req.session.currentBot.scriptId = req.params.id
     req.session.currentBot.settings = newScript.default_settings
     req.session.currentBot.description = newScript.desc
     req.session.currentBot.name = newScript.name
     var Bots = app.locals.dbClient.collection('Bots')
     Bots.update(
-      {'_id': req.session.currentBot._id},
+      {'_id': botId},
       req.session.currentBot)
-    return res.redirect('/portal/settings/')
+    return res.redirect('/portal/settings/' + botId)
   })
   .catch(function (err) {
     debug('Type change error')
@@ -221,7 +255,9 @@ app.get('/portal/config/info', exports.info)
 app.get('/portal/config', exports.list)
 app.get('/portal/config/edit', exports.edit)
 app.post('/portal/config/save', exports.save)
-app.get('/portal/settings', exports.settings)
+app.get('/portal/settings/:id', exports.settings)
 app.get('/portal/config/bots', exports.bots)
 app.get('/portal/config/change_bot', exports.changeBot)
 app.get('/portal/config/typeChange/:id', exports.typeChange)
+app.get('/portal/config/keywords', exports.keywords)
+app.post('/portal/config/keywordAdd', exports.keywordAdd)
