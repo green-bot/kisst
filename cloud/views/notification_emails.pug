@@ -23,11 +23,11 @@ block content
             each notification_email in notificationEmails
               .list-group-item
                 =notification_email
-                a(href='/portal/config/notification_email_delete?email=' + encodeURIComponent(notification_email), data-pjax='#main')
+                a(href='/portal/config/email_delete?email=' + encodeURIComponent(notification_email), data-pjax='#main')
                   i.fa.fa-trash-o.fa-lg
 
     .panel.panel-default
-      form.form-horizontal(method="POST", action="/portal/config/notificationCredsUpdate")
+      form.form-horizontal(method="POST", action="/portal/config/creds_update")
         .bootcards-list
           .panel-heading
             span.title Notification Settings
