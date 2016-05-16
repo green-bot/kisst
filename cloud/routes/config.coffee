@@ -3,16 +3,6 @@ _ = require('underscore')
 debug = require('debug')('config')
 ObjectID = require('mongodb').ObjectID
 
-keywords = (addresses) ->
-  keywords = _.map(addresses, (address) ->
-    address.keywords
-  )
-  rawKeywords = _.flatten(keywords)
-  finalKeywords = _.without(rawKeywords, 'test')
-  debug 'Current keywords'
-  debug finalKeywords
-  finalKeywords
-
 exports.info = (req, res) ->
   keywords = _.reduce(req.session.currentBot.addresses, ((memo, address) ->
     memo + address.networkHandleName + ','
@@ -99,7 +89,7 @@ exports.ownerAdd = (req, res) ->
   return
 
 exports.keywords = (req, res) ->
-  debug 'Showing keywords for...'
+  debug 'Showing keywords for ====> '
   debug req.session.currentBot
   res.render 'keywords', keywords: keywords(req.session.currentBot.addresses)
   return
