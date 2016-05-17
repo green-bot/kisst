@@ -25,11 +25,9 @@ exports.changeBot = (req, res) ->
   return
 
 exports.settings = (req, res) ->
-  Bots = app.locals.dbClient.collection('Bots')
-  Bots.find(_id: req.params.id).limit(1).next().then (bot) ->
-    req.session.currentBot = bot
-    res.render 'settings', bot: bot
-    return
+  debug 'Showing settings for'
+  debug req.session
+  res.render 'settings', bot: req.session.currentBot
   return
 
 exports.list = (req, res) ->
@@ -206,7 +204,7 @@ app.get '/portal/config/info', exports.info
 app.get '/portal/config', exports.list
 app.get '/portal/config/edit', exports.edit
 app.post '/portal/config/save', exports.save
-app.get '/portal/settings/:id', exports.settings
+app.get '/portal/settings', exports.settings
 app.get '/portal/config/bots', exports.bots
 app.get '/portal/config/change_bot', exports.changeBot
 app.get '/portal/config/typeChange/:id', exports.typeChange

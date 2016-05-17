@@ -10,8 +10,8 @@ block content
             a.pjax(href='/portal/conversations/download')
               | Download as CSV
         .panel-body
-          each conversation in conversations
+          each c in conversations
             .list-group
-              a.list-group-item.pjax(href='/portal/conversations/' + conversation.session_id)
-                h4.list-group-item-heading  #{conversation.ts} 
-                p.list-group-item-text #{conversation.display_timestamp}
+              a.list-group-item(href='/portal/conversations/'+c.objectId)
+                h4.list-group-item-heading  #{c.src}
+                p.list-group-item-text #{c.display_timestamp}

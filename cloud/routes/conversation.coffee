@@ -71,35 +71,34 @@ exports.download_csv = (req, res) ->
   return
 
 exports.list = (req, res) ->
+  debug 'Listing conversations'
+  debug req.session.passport.user
   Sessions = app.locals.dbClient.collection('Sessions')
-  botIds = _.map(req.session.bots, (bot) ->
-    bot._id
-  )
-  debug 'Looking for the following bot Ids'
-  debug botIds
-  mySessions = Sessions.find(botId: $in: botIds)
-  date_options = 
-    weekday: 'short'
-    year: '2-digit'
-    month: '2-digit'
-    day: '2-digit'
-    timeZone: 'America/New_York'
-  mappedSessions = mySessions.map((session) ->
-    record = {}
-    record.src = session.src
-    record.dst = session.dst
-    record.session_id = session.sessionId
-    record.ts = session.createdAt.toDateString('en-US', date_options)
-    record.objectId = session._id
-    record
-  )
-  mappedSessions.toArray().then (sessions) ->
-    res.render 'conversations', conversations: sessions
-    return
-  return
+  Sessions.find({botId: req.session.passport.user}).toArray()
+  .then (sessions) ->
+    debug 'I found the sessions:'
+    debug sessions
+
+    date_options =
+      weekday: 'short'
+      year: '2-digit'
+      month: '2-digit'
+      day: '2-digit'
+      timeZone: 'America/New_York'
+    mappedSessions = sessions.map (session) ->
+      record = {}
+      record.src = session.src
+      record.dst = session.dst
+      record.session_id = session.sessionId
+      record.ts = session.createdAt.toDateString('en-US', date_options)
+      record.objectId = session._id
+      record
+    res.render 'conversations', conversations: mappedSessions
 
 exports.read = (req, res) ->
-  debug 'Reading conversation'
+  debug 'Reading conversation for session id'
+  debug req.params
+
   Sessions = app.locals.dbClient.collection('Sessions')
   Sessions.find(_id: req.params.id).limit(1).next().then((session) ->
     debug 'Its a '
@@ -107,14 +106,14 @@ exports.read = (req, res) ->
     display_data = []
     data_labels = _.keys(session.collected_data)
     _.each data_labels, (element, index, list) ->
-      entry = 
+      entry =
         key: element
         v: session.collected_data[element]
       debug entry
       display_data.push entry
       return
     myDate = new Date(session.createdAt)
-    options = 
+    options =
       weekday: 'long'
       year: 'numeric'
       month: 'short'

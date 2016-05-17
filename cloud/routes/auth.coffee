@@ -9,52 +9,47 @@ app.use passport.initialize()
 app.use passport.session()
 passport.use new LocalStrategy((username, password, done) ->
   debug 'Auth local'
-  users = app.locals.dbClient.collection('users')
-  query = users.find('emails.address': username).limit(1).next()
-  debug 'I am loking for ' + username
-  query.then (user) ->
-    if !user
-      debug 'I cant find that user'
-      return done(null, false, message: 'Incorrect username.')
-    # This is a real user. Does the password match?
-    bcryptPass = user.services.password.bcrypt
-    hash = crypto.createHash('sha256')
-    hash.update password
-    hashedPass = hash.digest('hex')
-    matches = bcrypt.compareSync(hashedPass, bcryptPass)
-    if matches
-      done null, user
-    else
-      return done(null, false, message: 'Incorrect password.')
-    return
+  bots = app.locals.dbClient.collection('Bots')
+  query = bots.find('passcode': password).limit(1).next()
+  debug 'I am loking for ' + password
+  query.then (bot) ->
+    if !bot
+      debug 'I cant find that bot'
+      return done(null, false, message: 'Incorrect passcode.')
+    debug 'I found it!'
+    debug bot
+    done null, bot
   query.catch (err) ->
     done err
-  return
 )
-passport.serializeUser (user, done) ->
-  done null, user._id
+
+passport.serializeUser (bot, done) ->
+  done null, bot._id
   return
+
 passport.deserializeUser (id, done) ->
-  users = app.locals.dbClient.collection('users')
-  query = users.find('_id': id).limit(1).next()
-  query.then (user) ->
-    done null, user
+  bots = app.locals.dbClient.collection('Bots')
+  query = bots.find('_id': id).limit(1).next()
+  query.then (bot) ->
+    done null, bot
     return
   return
 
 app.post '/login', (req, res, next) ->
+  debug 'Requesting auth'
   passport.authenticate('local', (err, user, info) ->
-    debug 'Authed'
-    debug req.body
-
+    debug 'Auth called back'
+    debug err, user, info
+    req.session.currentBot = user
     if err
       return next(err)
     if !user
       return res.redirect('/login')
+    debug 'Authenticated'
     req.logIn user, (err) ->
       if err
         return next(err)
-      req.session.number = req.body.number
+      debug 'Logged in'
       res.redirect '/portal/conversations'
     return
   ) req, res, next

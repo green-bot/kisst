@@ -22,27 +22,16 @@ html(lang='en')
               .panel.panel-default
                 .panel-heading.clearfix
                     h3.panel-title.pull-left KISST PORTAL
-                    .btn-group.pull-right
-                      button.btn.btn-primary
-                        | Log In
                 .modal-body
                   .form-group
+                    .col-md-3
+                      label.control-label Passcode
+                    .col-md-5
+                      input.form-control(type='text', value='', name='password', required)
+                      input.form-control(type='hidden', value='NOT_NEEDED_SORTOF', name='username')
                     .col-md-4
-                      label.control-label Username
-                    .col-md-8
-                      input.form-control(type='text', value='', name='username', required)
-                  .form-group
-                    .col-md-4
-                      label.control-label Password
-                    .col-md-8
-                      input.form-control(type='password', value='', name='password', required)
-                  .form-group
-                    .col-md-4
-                      label.control-label KISST Number
-                    .col-md-8
-                      input.form-control(type='number', value='', name='number', required)
-                .panel-footer.text-center
-                    a(href="/reset_page") Forgot password?
+                      button.btn.btn-primary
+                        | Log In
 
   script(type='text/javascript').
     $("#login").validate()
