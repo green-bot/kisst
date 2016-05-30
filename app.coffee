@@ -26,7 +26,7 @@ app.use flash()
 require './cloud/routes/session'
 require './cloud/routes'
 # Connection URL
-url = 'mongodb://localhost:27017/greenbot'
+url = process.env.MONGO_URL or 'mongodb://localhost:27017/greenbot'
 MongoClient.connect url, (err, db) ->
   assert !err
   app.locals.dbClient = db
